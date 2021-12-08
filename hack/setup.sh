@@ -56,6 +56,10 @@ main() {
                         install_cartographer_package
                         ;;
 
+                latest-release)
+                        install_latest_cartographer_release
+                        ;;
+
                 example-dependencies)
                         install_source_controller
                         install_kpack
@@ -97,6 +101,15 @@ install_cartographer_package() {
                         -f-
 }
 
+install_latest_cartographer_release() {
+        log "installing latest cartographer release"
+
+        kubectl create namespace cartographer-system
+
+        kapp deploy -a cartographer --yes \
+                -f https://github.com/vmware-tanzu/cartographer/releases/latest/download/cartographer.yaml
+}
+
 show_usage_help() {
         echo "usage: $0 <command...>"
         cat <<-COMMANDS
@@ -106,6 +119,7 @@ show_usage_help() {
 
 	- cartographer 		build a release of cartographer and install it in the
 			cluster
+	- latest-release        installs the latest release of cartographer
 
 	- example-dependencies 	installs dependencies used throughout examples
 	- example 		install the example and runs a minimal test on it
