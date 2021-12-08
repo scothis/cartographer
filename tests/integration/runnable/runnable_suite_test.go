@@ -56,7 +56,7 @@ var (
 	controllerBuffer *gbytes.Buffer
 )
 
-const DebugControlPlane = false
+const DebugControlPlane = true
 
 var _ = BeforeSuite(func() {
 	var err error
@@ -76,7 +76,7 @@ var _ = BeforeSuite(func() {
 	}
 
 	if DebugControlPlane {
-		testEnv.ControlPlane.APIServer.Configure().
+		testEnv.ControlPlane.GetAPIServer().Configure().
 			Append("audit-policy-file", filepath.Join(workingDir, "policy.yaml")).
 			Append("audit-log-path", "-")
 	}
