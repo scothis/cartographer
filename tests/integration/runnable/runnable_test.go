@@ -186,6 +186,8 @@ var _ = Describe("Stamping a resource on Runnable Creation", func() {
 
 				Expect(resourceList.Items[0].Name).To(ContainSubstring("my-stamped-resource-"))
 				Expect(resourceList.Items[0].Spec.ScopeSelector.MatchExpressions[0].Values).To(ConsistOf("val"))
+
+				Fail("Oh Noes!")
 			})
 
 			Context("and the Runnable object is updated", func() {

@@ -21,7 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 )
 
-const DebugControlPlane = false
+const DebugControlPlane = true
 
 func CreateTestEnv(workingDir string, out io.Writer) *envtest.Environment {
 	testEnv := &envtest.Environment{
