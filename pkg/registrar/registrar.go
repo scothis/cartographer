@@ -19,6 +19,8 @@ package registrar
 import (
 	"context"
 	"fmt"
+	"github.com/vmware-tanzu/cartographer/pkg/tracker"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -102,6 +104,7 @@ func registerWorkloadController(mgr manager.Manager) error {
 		ConditionManagerBuilder: conditions.NewConditionManager,
 		ResourceRealizerBuilder: realizerworkload.NewResourceRealizerBuilder(repository.NewRepository, realizerclient.NewClientBuilder(mgr.GetConfig()), repository.NewCache(mgr.GetLogger().WithName("workload-stamping-repo-cache"))),
 		Realizer:                realizerworkload.NewRealizer(),
+		NewTracker:              tracker.New(time.Hour*20, mgr.GetLogger().WithName("workload-tracker")),
 	}
 
 	ctrl, err := pkgcontroller.New("workload", mgr, pkgcontroller.Options{
@@ -119,6 +122,8 @@ func registerWorkloadController(mgr manager.Manager) error {
 	); err != nil {
 		return fmt.Errorf("watch: %w", err)
 	}
+
+	mgr.GetScheme()
 
 	mapper := Mapper{
 		Client: mgr.GetClient(),

@@ -19,13 +19,10 @@ package workload
 import (
 	"context"
 	"fmt"
-
-	"github.com/go-logr/logr"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	ctrl "sigs.k8s.io/controller-runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 
+	"github.com/go-logr/logr"
 	"github.com/vmware-tanzu/cartographer/pkg/apis/v1alpha1"
 	"github.com/vmware-tanzu/cartographer/pkg/conditions"
 	"github.com/vmware-tanzu/cartographer/pkg/controller"
@@ -34,6 +31,9 @@ import (
 	"github.com/vmware-tanzu/cartographer/pkg/repository"
 	"github.com/vmware-tanzu/cartographer/pkg/tracker"
 	"github.com/vmware-tanzu/cartographer/pkg/utils"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 type Reconciler struct {
@@ -42,6 +42,7 @@ type Reconciler struct {
 	ResourceRealizerBuilder realizer.ResourceRealizerBuilder
 	Realizer                realizer.Realizer
 	DynamicTracker          tracker.DynamicTracker
+	NewTracker              tracker.Tracker
 	conditionManager        conditions.ConditionManager
 }
 
@@ -139,18 +140,27 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		r.conditionManager.AddPositive(ResourcesSubmittedCondition())
 	}
 
-	var trackingError error
+	//var trackingError error
 	if len(stampedObjects) > 0 {
 		for _, stampedObject := range stampedObjects {
+			key := tracker.NewKey(stampedObject.GroupVersionKind(), types.NamespacedName{
+				Namespace: stampedObject.GetNamespace(),
+				Name:      stampedObject.GetName(),
+			})
+			r.NewTracker.Track(key, req.NamespacedName)
+			log.V(logger.DEBUG).Info("added informer for object",
+				"object", stampedObject)
+
 			trackingError = r.DynamicTracker.Watch(log, stampedObject, &handler.EnqueueRequestForOwner{OwnerType: &v1alpha1.Workload{}})
-			if trackingError != nil {
-				log.Error(err, "failed to add informer for object",
-					"object", stampedObject)
-				err = controller.NewUnhandledError(trackingError)
-			} else {
-				log.V(logger.DEBUG).Info("added informer for object",
-					"object", stampedObject)
-			}
+			trackingError = r.DynamicTracker.Watch(log, stampedObject, controller.EnqueueTracked(stampedObject, r.NewTracker))
+			//if trackingError != nil {
+			//	log.Error(err, "failed to add informer for object",
+			//		"object", stampedObject)
+			//	err = controller.NewUnhandledError(trackingError)
+			//} else {
+			//	log.V(logger.DEBUG).Info("added informer for object",
+			//		"object", stampedObject)
+			//}
 		}
 	}
 
