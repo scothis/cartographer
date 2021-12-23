@@ -14,176 +14,27 @@ spec:
     # Env is an array of environment variables to propagate to
     # build resources in the supply chain.
     env:
-        
-      - # Name of the environment variable. Must be a
-        # C_IDENTIFIER.
-        name: <string>
-        
-        # Variable references $(VAR_NAME) are expanded using the
-        # previously defined environment variables in the
-        # container and any service environment variables. If a
-        # variable cannot be resolved, the reference in the input
-        # string will be unchanged. Double $$ are reduced to a
-        # single $, which allows for escaping the $(VAR_NAME)
-        # syntax: i.e. "$$(VAR_NAME)" will produce the string
-        # literal "$(VAR_NAME)". Escaped references will never be
-        # expanded, regardless of whether the variable exists or
-        # not. Defaults to "".
-        value: <string>
-        
-        # Source for the environment variable's value. Cannot be
-        # used if value is not empty.
-        valueFrom:
-          
-          # Selects a key of a ConfigMap.
-          configMapKeyRef:
-            
-            # The key to select.
-            key: <string>
-            
-            # Name of the referent. More info:
-            # https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-            # TODO: Add other useful fields. apiVersion, kind,
-            # uid?
-            name: <string>
-            
-            # Specify whether the ConfigMap or its key must be
-            # defined
-            optional: <boolean>
-          
-          # Selects a field of the pod: supports metadata.name,
-          # metadata.namespace, `metadata.labels['<KEY>']`,
-          # `metadata.annotations['<KEY>']`, spec.nodeName,
-          # spec.serviceAccountName, status.hostIP, status.podIP,
-          # status.podIPs.
-          fieldRef:
-            
-            # Version of the schema the FieldPath is written in
-            # terms of, defaults to "v1".
-            apiVersion: <string>
-            
-            # Path of the field to select in the specified API
-            # version.
-            fieldPath: <string>
-          
-          # Selects a resource of the container: only resources
-          # limits and requests (limits.cpu, limits.memory,
-          # limits.ephemeral-storage, requests.cpu,
-          # requests.memory and requests.ephemeral-storage) are
-          # currently supported.
-          resourceFieldRef:
-            
-            # Container name: required for volumes, optional for
-            # env vars
-            containerName: <string>
-            
-            # Specifies the output format of the exposed
-            # resources, defaults to "1"
-            divisor: <>
-            
-            # Required: resource to select
-            resource: <string>
-          
-          # Selects a key of a secret in the pod's namespace
-          secretKeyRef:
-            
-            # The key of the secret to select from.  Must be a
-            # valid secret key.
-            key: <string>
-            
-            # Name of the referent. More info:
-            # https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-            # TODO: Add other useful fields. apiVersion, kind,
-            # uid?
-            name: <string>
-            
-            # Specify whether the Secret or its key must be
-            # defined
-            optional: <boolean>
   
   # Environment variables to be passed to the main container
   # running the application.
   env:
-      
-    - # Name of the environment variable. Must be a C_IDENTIFIER.
       name: <string>
-      
-      # Variable references $(VAR_NAME) are expanded using the
-      # previously defined environment variables in the container
-      # and any service environment variables. If a variable
-      # cannot be resolved, the reference in the input string will
-      # be unchanged. Double $$ are reduced to a single $, which
-      # allows for escaping the $(VAR_NAME) syntax: i.e.
-      # "$$(VAR_NAME)" will produce the string literal
-      # "$(VAR_NAME)". Escaped references will never be expanded,
-      # regardless of whether the variable exists or not. Defaults
-      # to "".
       value: <string>
-      
-      # Source for the environment variable's value. Cannot be
-      # used if value is not empty.
       valueFrom:
-        
-        # Selects a key of a ConfigMap.
         configMapKeyRef:
-          
-          # The key to select.
           key: <string>
-          
-          # Name of the referent. More info:
-          # https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-          # TODO: Add other useful fields. apiVersion, kind, uid?
           name: <string>
-          
-          # Specify whether the ConfigMap or its key must be
-          # defined
           optional: <boolean>
-        
-        # Selects a field of the pod: supports metadata.name,
-        # metadata.namespace, `metadata.labels['<KEY>']`,
-        # `metadata.annotations['<KEY>']`, spec.nodeName,
-        # spec.serviceAccountName, status.hostIP, status.podIP,
-        # status.podIPs.
         fieldRef:
-          
-          # Version of the schema the FieldPath is written in
-          # terms of, defaults to "v1".
           apiVersion: <string>
-          
-          # Path of the field to select in the specified API
-          # version.
           fieldPath: <string>
-        
-        # Selects a resource of the container: only resources
-        # limits and requests (limits.cpu, limits.memory,
-        # limits.ephemeral-storage, requests.cpu, requests.memory
-        # and requests.ephemeral-storage) are currently supported.
         resourceFieldRef:
-          
-          # Container name: required for volumes, optional for env
-          # vars
           containerName: <string>
-          
-          # Specifies the output format of the exposed resources,
-          # defaults to "1"
           divisor: <>
-          
-          # Required: resource to select
           resource: <string>
-        
-        # Selects a key of a secret in the pod's namespace
         secretKeyRef:
-          
-          # The key of the secret to select from.  Must be a valid
-          # secret key.
           key: <string>
-          
-          # Name of the referent. More info:
-          # https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-          # TODO: Add other useful fields. apiVersion, kind, uid?
           name: <string>
-          
-          # Specify whether the Secret or its key must be defined
           optional: <boolean>
   
   # Image refers to a pre-built image in a registry. It is an
@@ -201,17 +52,7 @@ spec:
   # Resource constraints for the application. See
   # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
   resources:
-    
-    # Limits describes the maximum amount of compute resources
-    # allowed. More info:
-    # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     limits: <object>
-    
-    # Requests describes the minimum amount of compute resources
-    # required. If Requests is omitted for a container, it
-    # defaults to Limits if that is explicitly specified,
-    # otherwise to an implementation-defined value. More info:
-    # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     requests: <object>
   
   # ServiceAccountName refers to the Service account with

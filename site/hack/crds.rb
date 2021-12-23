@@ -7,28 +7,48 @@ CONFIG_DIR = File.join(__dir__, "crds")
 CRD_DIR = File.join(__dir__, "..", "..", "config", "crd", "bases")
 OUT_DIR = File.join(__dir__, "..", "content", "docs", "development", "crds")
 
+HIDE_DESCRIPTION = "_hideDescription"
+HIDE_CHILD_DESCRIPTIONS = "_hideChildDescriptions"
+MAX_DEPTH = "_maxDepth"
+
 class Config
-  def initialize(obj)
+  def initialize(obj, recursive_hide_description = false, max_depth = nil)
     @obj = obj
+    @recursive_hide_description = recursive_hide_description
+    @max_depth = max_depth
   end
 
+
   def [](field)
-    Config.new(obj[field] || {})
+    Config.new(
+        obj[field] || {},
+        !!obj.dig(HIDE_CHILD_DESCRIPTIONS) || recursive_hide_description,
+        obj.dig(MAX_DEPTH) && obj.dig(MAX_DEPTH).to_i - 1,
+    )
   end
 
   def version
     obj["_version"]
   end
 
-  def deleted?(field)
-    obj.dig(field, "_delete") == true
+  def deleted?
+    return true if obj.dig("_delete") == true
+    @max_depth || 2 < 1
+  end
+
+  def hide_description?
+    obj.dig(HIDE_DESCRIPTION) == true || recursive_hide_description
   end
 
   # todo add a validator so we can help with the config doc editing
 
   private
 
-  attr_reader :obj
+  attr_reader :obj,
+      :recursive_hide_description,
+      :max_depth
+
+
 
 end
 
@@ -118,38 +138,43 @@ class DocGen
 
   attr_reader :out
 
-  def key_header(schema_obj)
+  def key_header(schema_obj, config)
     return unless schema_obj.has_key?("description")
+    return if config.hide_description?
     out.puts
     out.comment schema_obj['description']
   end
 
   def add_properties(schema_obj, config)
     schema_obj["properties"].each do |name, source|
-      next if config.deleted? name
       type = source["type"]
+      child_config = config[name]
       case type
       when "object"
-        add_object(name, source, config[name])
+        add_object(name, source, child_config)
       when "array"
-        add_array(name, source, config[name])
+        add_array(name, source, child_config)
       else
-        add_scalar(name, source)
+        add_scalar(name, source, child_config)
       end
     end
   end
 
-  def add_scalar(name, schema_obj)
-    key_header schema_obj
+  def add_scalar(name, schema_obj, config)
+    return if config.deleted?
+
+    key_header schema_obj, config
 
     out.puts "#{name}: <#{schema_obj["type"]}>"
   end
 
   def add_object(name, schema_obj, config)
-    key_header schema_obj
+    return if config.deleted?
 
-    unless schema_obj.has_key? "properties"
-      out.puts "#{name}: <object>"
+    key_header schema_obj, config
+
+    unless schema_obj.has_key?("properties")
+      out.puts "#{name}: <object>" # todo, need to count properties to fix the writer.
       return
     end
 
@@ -160,7 +185,9 @@ class DocGen
   end
 
   def add_array(name, schema_obj, config)
-    key_header schema_obj
+    return if config.deleted?
+
+    key_header schema_obj, config
 
     unless schema_obj.has_key? "items"
       out.puts "#{name}: <array>"
