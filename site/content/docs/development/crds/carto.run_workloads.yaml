@@ -250,3 +250,64 @@ spec:
     # Subpath inside the Git repository or Image to treat as the
     # root of the application. Defaults to the root if left empty.
     subPath: <string>
+
+# Status conforms to the Kubernetes conventions:
+# https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+status:
+  
+  # Conditions describing this resource's reconcile state. The top
+  # level condition is of type `Ready`, and follows these
+  # Kubernetes conventions:
+  # https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+  conditions:
+      
+    - # lastTransitionTime is the last time the condition
+      # transitioned from one status to another. This should be
+      # when the underlying condition changed.  If that is not
+      # known, then using the time when the API field changed is
+      # acceptable.
+      lastTransitionTime: <string>
+      
+      # message is a human readable message indicating details
+      # about the transition. This may be an empty string.
+      message: <string>
+      
+      # observedGeneration represents the .metadata.generation
+      # that the condition was set based upon. For instance, if
+      # .metadata.generation is currently 12, but the
+      # .status.conditions[x].observedGeneration is 9, the
+      # condition is out of date with respect to the current state
+      # of the instance.
+      observedGeneration: <integer>
+      
+      # reason contains a programmatic identifier indicating the
+      # reason for the condition's last transition. Producers of
+      # specific condition types may define expected values and
+      # meanings for this field, and whether the values are
+      # considered a guaranteed API. The value should be a
+      # CamelCase string. This field may not be empty.
+      reason: <string>
+      
+      # status of the condition, one of True, False, Unknown.
+      status: <string>
+      
+      # type of condition in CamelCase or in
+      # foo.example.com/CamelCase. --- Many .condition.type values
+      # are consistent across resources like Available, but
+      # because arbitrary conditions can be useful (see
+      # .node.status.conditions), the ability to deconflict is
+      # important. The regex it matches is
+      # (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+      type: <string>
+  
+  # ObservedGeneration refers to the metadata.Generation of the
+  # spec that resulted in the current `status`.
+  observedGeneration: <integer>
+  
+  # SupplyChainRef is the Supply Chain resource that was used when
+  # this status was set.
+  supplyChainRef:
+    apiVersion: <string>
+    kind: <string>
+    name: <string>
+    namespace: <string>

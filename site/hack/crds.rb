@@ -2,182 +2,35 @@
 require 'yaml'
 require 'fileutils'
 
-class Config < Hash
-  def [] key
-    value = super key.to_sym
-    return Config[value] if value.is_a? Hash
-    value
-  end
 
-  def skip? key
-    self.has_key?(key.to_sym) && self[key].nil?
-  end
-
-  def get_skip key
-    self[key] || Config.new()
-  end
-end
-
-
-CONFIG_DIR = File.join(__dir__, "..", "..", "config", "crd", "bases")
+CONFIG_DIR = File.join(__dir__, "crds")
+CRD_DIR = File.join(__dir__, "..", "..", "config", "crd", "bases")
 OUT_DIR = File.join(__dir__, "..", "content", "docs", "development", "crds")
-FILES = [
-    [
-        "carto.run_clusterconfigtemplates.yaml",
-        Config[{
-            apiVersion: nil,
-            kind: nil,
-            status: nil,
-            spec: {
-                build: {
-                    env: {
-                    }
-                }
-            }
-        }],
-    ],
-    [
-        "carto.run_clusterdeliveries.yaml",
-        Config[{
-            apiVersion: nil,
-            kind: nil,
-            status: nil,
-            spec: {
-                build: {
-                    env: {
-                    }
-                }
-            }
-        }],
-    ],
-    [
-        "carto.run_clusterdeploymenttemplates.yaml",
-        Config[{
-            apiVersion: nil,
-            kind: nil,
-            status: nil,
-            spec: {
-                build: {
-                    env: {
-                    }
-                }
-            }
-        }],
-    ],
-    [
-        "carto.run_clusterimagetemplates.yaml",
-        Config[{
-            apiVersion: nil,
-            kind: nil,
-            status: nil,
-            spec: {
-                build: {
-                    env: {
-                    }
-                }
-            }
-        }],
-    ],
-    [
-        "carto.run_clusterruntemplates.yaml",
-        Config[{
-            apiVersion: nil,
-            kind: nil,
-            status: nil,
-            spec: {
-                build: {
-                    env: {
-                    }
-                }
-            }
-        }],
-    ],
-    [
-        "carto.run_clustersourcetemplates.yaml",
-        Config[{
-            apiVersion: nil,
-            kind: nil,
-            status: nil,
-            spec: {
-                build: {
-                    env: {
-                    }
-                }
-            }
-        }],
-    ],
-    [
-        "carto.run_clustersupplychains.yaml",
-        Config[{
-            apiVersion: nil,
-            kind: nil,
-            status: nil,
-            spec: {
-                build: {
-                    env: {
-                    }
-                }
-            }
-        }],
-    ],
-    [
-        "carto.run_clustertemplates.yaml",
-        Config[{
-            apiVersion: nil,
-            kind: nil,
-            status: nil,
-            spec: {
-                build: {
-                    env: {
-                    }
-                }
-            }
-        }],
-    ],
-    [
-        "carto.run_deliverables.yaml",
-        Config[{
-            apiVersion: nil,
-            kind: nil,
-            status: nil,
-            spec: {
-                build: {
-                    env: {
-                    }
-                }
-            }
-        }],
-    ],
-    [
-        "carto.run_runnables.yaml",
-        Config[{
-            apiVersion: nil,
-            kind: nil,
-            status: nil,
-            spec: {
-                build: {
-                    env: {
-                    }
-                }
-            }
-        }],
-    ],
-    [
-        "carto.run_workloads.yaml",
-        Config[{
-            apiVersion: nil,
-            kind: nil,
-            status: nil,
-            spec: {
-                build: {
-                    env: {
-                    }
-                }
-            }
-        }],
-    ],
-]
 
+class Config
+  def initialize(obj)
+    @obj = obj
+  end
+
+  def [](field)
+    Config.new(obj[field] || {})
+  end
+
+  def version
+    obj["_version"]
+  end
+
+  def deleted?(field)
+    obj.dig(field, "_delete") == true
+  end
+
+  # todo add a validator so we can help with the config doc editing
+
+  private
+
+  attr_reader :obj
+
+end
 
 class String
   def word_wrap(col_width = 80)
@@ -221,12 +74,12 @@ class Writer
     @array_mode = false
   end
 
-  def puts msg = ""
+  def puts(msg = "")
     indent = gen_indent
     @out.puts("#{indent}#{msg}")
   end
 
-  def comment comment
+  def comment(comment)
     indent = gen_indent
     comment_lines = comment.word_wrap(@wrap - indent.length)
     comment_lines.split("\n").each do |line|
@@ -247,82 +100,119 @@ class Writer
 end
 
 
-def key_header(o, schemaObj)
-  return unless schemaObj.has_key?("description")
-  o.puts
-  o.comment schemaObj['description']
-end
+class DocGen
 
-def add_object(o, name, schemaObj, skips)
-  key_header o, schemaObj
-
-  unless schemaObj.has_key? "properties"
-    o.puts "#{name}: <object>"
-    return
+  def initialize(writer)
+    @out = writer
   end
 
-  o.puts "#{name}:"
-  o.indent
-  add_properties(o, schemaObj, skips)
-  o.outdent
-end
+  def process_version(config, schema, spec)
+    out.puts "---"
+    out.puts "apiVersion: #{spec['group']}/#{config.version}"
+    out.puts "kind: #{spec["names"]["kind"]}"
 
-
-def add_array(o, name, schemaObj, skips)
-  key_header o, schemaObj
-
-  unless schemaObj.has_key? "items"
-    o.puts "#{name}: <array>"
-    return
+    add_properties(schema, config)
   end
 
-  o.puts "#{name}:"
-  o.indent_array
-  add_properties(o, schemaObj["items"], skips)
-  o.outdent_array
-end
+  private
 
-def add_scalar(o, name, schemaObj)
-  key_header o, schemaObj
+  attr_reader :out
 
-  o.puts "#{name}: <#{schemaObj["type"]}>"
-end
+  def key_header(schema_obj)
+    return unless schema_obj.has_key?("description")
+    out.puts
+    out.comment schema_obj['description']
+  end
 
-
-def add_properties(o, schemaObj, skips)
-
-  schemaObj["properties"].each do |name, source|
-    next if skips.skip? name
-
-    type = source["type"]
-    case type
-    when "object"
-      add_object(o, name, source, skips.get_skip(name))
-    when "array"
-      add_array(o, name, source, skips.get_skip(name))
-    else
-      add_scalar(o, name, source)
+  def add_properties(schema_obj, config)
+    schema_obj["properties"].each do |name, source|
+      next if config.deleted? name
+      type = source["type"]
+      case type
+      when "object"
+        add_object(name, source, config[name])
+      when "array"
+        add_array(name, source, config[name])
+      else
+        add_scalar(name, source)
+      end
     end
   end
-end
 
-FileUtils.mkdir_p OUT_DIR
+  def add_scalar(name, schema_obj)
+    key_header schema_obj
 
-FILES.each do |file_definition|
-  filename, config = file_definition
+    out.puts "#{name}: <#{schema_obj["type"]}>"
+  end
 
-  f = File.open(File.join(OUT_DIR, filename), "w")
-  o = Writer.new(f)
-  crd = YAML.load_file(File.join(CONFIG_DIR, filename))
-  spec = crd["spec"]
-  spec["versions"].each do |version|
-    schema = version["schema"]["openAPIV3Schema"]
+  def add_object(name, schema_obj, config)
+    key_header schema_obj
 
-    o.puts "---"
-    o.puts "apiVersion: #{spec['group']}/#{version['name']}"
-    o.puts "kind: #{spec["names"]["kind"]}"
+    unless schema_obj.has_key? "properties"
+      out.puts "#{name}: <object>"
+      return
+    end
 
-    add_properties(o, schema, config)
+    out.puts "#{name}:"
+    out.indent
+    add_properties(schema_obj, config)
+    out.outdent
+  end
+
+  def add_array(name, schema_obj, config)
+    key_header schema_obj
+
+    unless schema_obj.has_key? "items"
+      out.puts "#{name}: <array>"
+      return
+    end
+
+    out.puts "#{name}:"
+    out.indent_array
+    add_properties(schema_obj["items"], config)
+    out.outdent_array
   end
 end
 
+def main
+  FileUtils.mkdir_p OUT_DIR
+  config_files = Dir.glob(File.join(CONFIG_DIR, '*.yaml'))
+
+  config_files.each do |filename|
+    puts "Processing: #{filename}"
+
+    # Load Config
+    config_object = YAML.load_file(filename)
+    config_object["apiVersion"] = {"_delete" => true}
+    config_object["kind"] = {"_delete" => true}
+
+    config = Config.new(config_object)
+
+    # Load Input CRD Spec
+    input_filename = File.join(CRD_DIR, File.basename(filename))
+    puts "\tSource CRD: #{File.absolute_path(input_filename)}"
+
+    crd = YAML.load_file(input_filename)
+    spec = crd["spec"]
+
+    # Create/Open Target Spec Yaml
+    output_filename = File.join(OUT_DIR, File.basename(filename))
+    puts "\tTarget Resource Spec: #{File.absolute_path(output_filename)}"
+
+    writer = Writer.new(File.open(output_filename, "w"))
+
+    puts "\tUsing version (config._version): #{config.version}"
+
+    version_spec = spec["versions"].find { |version| version["name"] == config.version }
+    if version_spec.nil?
+      puts "Error: version not found"
+      next
+    end
+
+    schema = version_spec["schema"]["openAPIV3Schema"]
+    DocGen.new(writer).process_version(config, schema, spec)
+
+  end
+end
+
+main
