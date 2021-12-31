@@ -11,5 +11,6 @@ spec:
     # really should be in the docs
     _appendDescription: See https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/
     _hideChildDescriptions: true
+    _maxDepth: 1
   resources:
     _hideChildDescriptions: true

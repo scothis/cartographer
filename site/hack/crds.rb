@@ -12,18 +12,21 @@ HIDE_CHILD_DESCRIPTIONS = "_hideChildDescriptions"
 MAX_DEPTH = "_maxDepth"
 
 class Config
-  def initialize(obj, recursive_hide_description = false, max_depth = nil)
+  def initialize(obj, recursive_hide_description = false, max_depth = 99)
+    puts max_depth
     @obj = obj
     @recursive_hide_description = recursive_hide_description
-    @max_depth = max_depth
-  end
 
+    override_max_depth = obj.dig(MAX_DEPTH) || 99
+
+    @max_depth = [override_max_depth.to_i, max_depth].min
+  end
 
   def [](field)
     Config.new(
         obj[field] || {},
         !!obj.dig(HIDE_CHILD_DESCRIPTIONS) || recursive_hide_description,
-        obj.dig(MAX_DEPTH) && obj.dig(MAX_DEPTH).to_i - 1,
+        max_depth - 1,
     )
   end
 
@@ -33,7 +36,7 @@ class Config
 
   def deleted?
     return true if obj.dig("_delete") == true
-    @max_depth || 2 < 1
+    return too_deep?
   end
 
   def hide_description?
@@ -48,8 +51,9 @@ class Config
       :recursive_hide_description,
       :max_depth
 
-
-
+  def too_deep?
+    max_depth < 0
+  end
 end
 
 class String
@@ -69,7 +73,7 @@ class Writer
   attr_accessor :out
   attr_accessor :wrap
 
-  def initialize out = $stdout, wrap = 64
+  def initialize(out = $stdout, wrap = 64)
     @indent = 0
     @out = out
     @wrap = wrap

@@ -14,6 +14,9 @@ spec:
     # Env is an array of environment variables to propagate to
     # build resources in the supply chain.
     env:
+        name: <string>
+        value: <string>
+        valueFrom:
   
   # Environment variables to be passed to the main container
   # running the application.
@@ -21,21 +24,6 @@ spec:
       name: <string>
       value: <string>
       valueFrom:
-        configMapKeyRef:
-          key: <string>
-          name: <string>
-          optional: <boolean>
-        fieldRef:
-          apiVersion: <string>
-          fieldPath: <string>
-        resourceFieldRef:
-          containerName: <string>
-          divisor: <>
-          resource: <string>
-        secretKeyRef:
-          key: <string>
-          name: <string>
-          optional: <boolean>
   
   # Image refers to a pre-built image in a registry. It is an
   # alternative to defining source code.
