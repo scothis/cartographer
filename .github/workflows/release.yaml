@@ -27,7 +27,7 @@ jobs:
         with: { fetch-depth: 0 }
 
       - name: set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with: { go-version: '^1.17' }
 
       - name: check copyright header
@@ -74,7 +74,7 @@ jobs:
         with: {fetch-depth: 0}
 
       - name: set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with: {go-version: '^1.17'}
 
       - name: setup base dependencies
